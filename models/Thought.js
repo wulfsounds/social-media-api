@@ -1,68 +1,65 @@
+const moment = require('moment');
 const { Schema, model } = require('mongoose');
+const { Types } = require('mysql');
+
+const Thought = model('Thought', thoughtSchema);
 
 // Thought Schema
 
 const thoughtSchema = new Schema (
     {
         thoughtText: {
-            /*
-                * String
-                * Required  
-                * Must be between 1 and 280 characters
-            */
+            type: String,
+            required: true,
+            validate: { len: [1-280] }
         },
         createdAt: {
-            /*
-                * Date
-                * Set default value to the current timestamp
-                * Use a getter method to format the timestamp on query
-            */
+            type: Date,
+            default: Date.now,
+            // Use a getter method to format the timestamp on query
+           get: (timeStamp) => moment(timeStamp).format('MMMM Do YYYY, h:mm:ss a')
         },
-        username: {
-            /* 
-                * String
-                * Required
-            */
-        },
-        reactions: {
-            /*
-                * Array of nested documents created with the `reactionSchema`
-            */
-        }
+        username: { type: String, required: true },
+        reactions: [reactionSchema]
+    },
+    { 
+        toJSON: { getters: true, virtual: true },
+        id: false 
     }
-    // Create a virtual called `reactionCount` that retrieves the length of the thought's `reactions` array field on query.
 )
 
-// Reaction Schema
+// Create a virtual called `reactionCount` that retrieves the length of the thought's `reactions` array field on query.
+thoughtSchema.virtual('reactionCount').get(function () { return this.reactions.length })
+
+// Reaction Schema .. This will not be a model, but rather will be used as the `reaction` field's subdocument schema in the `Thought` model.
 
 const reactionSchema = new Schema (
     {
         reactionId: {
-            /*  
-                * Use Mongoose's ObjectId data type
-                * Default value is set to a new ObjectId 
-            */
+           type: Schema.Types.ObjectId,
+           default: () => new Types.ObjectId()
         },
         reactionBody: {
-            /*  
-                * String
-                * Required
-                * 280 character maximum
-            */
+           type: String,
+           required: true,
+           validate: { len: [1-280] }
         },
         username: {
-            /* 
-                * String
-                * Required
-            */
+           type: String,
+           required: true
         },
         createdAt: {
-            /*
-                * Date
-                * Set default value to the current timestamp
-                * Use a getter method to format the timestamp on query
-            */
+            type: Date,
+            default: Date.now,
+            // Use a getter method to format the timestamp on query
+            get: (timeStamp) => moment(timeStamp).format('MMMM Do YYYY, h:mm:ss a')
         }
+    },
+    { 
+        toJSON: { getters: true, virtual: true },
+        id: false 
     }
-    // This will not be a model, but rather will be used as the `reaction` field's subdocument schema in the `Thought` model.
 )
+
+
+module.exports = Thought;
