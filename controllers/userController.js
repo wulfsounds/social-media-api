@@ -54,7 +54,7 @@ module.exports = {
       .then((thought) =>
         !thought
           ? res.status(404).json({
-              message: 'User deleted, but no courses found',
+              message: 'User deleted, but no thoughts found',
             })
           : res.json({ message: 'User successfully deleted' })
       )

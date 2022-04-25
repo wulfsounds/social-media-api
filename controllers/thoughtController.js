@@ -1,10 +1,10 @@
 const { Thought, User } = require('../models');
 
 module.exports = {
-  // Get all thoughts
+  // Get all reactions
   getThoughts(req, res) {
     Thought.find()
-      .then((thoughts) => res.json(thoughts))
+      .then((reaction) => res.json(reaction))
       .catch((err) => res.status(500).json(err));
   },
   // Get a thought
@@ -52,4 +52,26 @@ module.exports = {
       )
       .catch((err) => res.status(500).json(err));
   },
+
+    // Create a reaction
+    createReaction(req, res) {
+      Reaction.create(req.body)
+        .then((reaction) => res.json(reaction))
+        .catch((err) => {
+          console.log(err);
+          return res.status(500).json(err);
+        });
+    },
+  
+    // Delete a reaction
+    deleteReaction(req, res) {
+      Reaction.findOneAndDelete({ _id: req.params.thoughtId })
+        .then((reaction) =>
+          !reaction
+            ? res.status(404).json({ message: 'No reaction with that ID' })
+            : User.deleteMany({ _id: { $in: reaction.user } })
+        )
+        .then(() => res.json({ message: 'Reaction and user deleted!' }))
+        .catch((err) => res.status(500).json(err));
+    }
 };
