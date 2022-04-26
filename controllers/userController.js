@@ -42,16 +42,12 @@ module.exports = {
 	},
 
 	// Update a user
-	async updateUser({ params, body }, res) {
-		await User.findOneAndUpdate({ _id: params.id }, body, {
-			runValidators: true,
-			new: true,
-		})
-			.then((user) =>
-				!user
-					? res.status(404).json({ message: "No such user exists" })
-					: res.json({ user })
-			)
+	async updateUser(req, res) {
+		await User.updateOne(
+			{ _id: req.params.userId }, 
+			{ $set: req.body }, 
+			{runValidators: true, new: true})
+			.then((user) => res.json({ user }))
 			.catch((err) => {
 				console.log(err);
 				return res.status(500).json(err);
