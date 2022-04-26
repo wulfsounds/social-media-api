@@ -2,14 +2,14 @@ const { Thought, User } = require('../models');
 
 module.exports = {
   // Get all reactions
-  getThoughts(req, res) {
-    Thought.find()
+  async getThoughts(req, res) {
+    await Thought.find()
       .then((reaction) => res.json(reaction))
       .catch((err) => res.status(500).json(err));
   },
   // Get a thought
-  getSingleThought(req, res) {
-    Thought.findOne({ _id: req.params.thoughtId })
+  async getSingleThought(req, res) {
+    await Thought.findOne({ _id: req.params.thoughtId })
       .select('-__v')
       .then((thought) =>
         !thought
@@ -19,8 +19,8 @@ module.exports = {
       .catch((err) => res.status(500).json(err));
   },
   // Create a thought
-  createThought(req, res) {
-    Thought.create(req.body)
+  async createThought(req, res) {
+    await Thought.create(req.body)
       .then((thought) => res.json(thought))
       .catch((err) => {
         console.log(err);
@@ -28,8 +28,8 @@ module.exports = {
       });
   },
   // Delete a thought
-  deleteThought(req, res) {
-    Thought.findOneAndDelete({ _id: req.params.thoughtId })
+  async deleteThought(req, res) {
+    await Thought.findOneAndDelete({ _id: req.params.thoughtId })
       .then((thought) =>
         !thought
           ? res.status(404).json({ message: 'No thought with that ID' })
@@ -39,8 +39,8 @@ module.exports = {
       .catch((err) => res.status(500).json(err));
   },
   // Update a thought
-  updateThought(req, res) {
-    Thought.findOneAndUpdate(
+  async updateThought(req, res) {
+    await Thought.findOneAndUpdate(
       { _id: req.params.thoughtId },
       { $set: req.body },
       { runValidators: true, new: true }
@@ -54,8 +54,8 @@ module.exports = {
   },
 
     // Create a reaction
-    createReaction(req, res) {
-      Reaction.create(req.body)
+    async createReaction(req, res) {
+      await Reaction.create(req.body)
         .then((reaction) => res.json(reaction))
         .catch((err) => {
           console.log(err);
@@ -64,8 +64,8 @@ module.exports = {
     },
   
     // Delete a reaction
-    deleteReaction(req, res) {
-      Reaction.findOneAndDelete({ _id: req.params.thoughtId })
+    async deleteReaction(req, res) {
+      await Reaction.findOneAndDelete({ _id: req.params.thoughtId })
         .then((reaction) =>
           !reaction
             ? res.status(404).json({ message: 'No reaction with that ID' })

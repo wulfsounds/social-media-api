@@ -1,14 +1,14 @@
-const { ObjectId } = require("mongoose").Types;
 const { User, Thought } = require("../models");
 
 module.exports = {
 	// Get all users
-	getUsers(req, res) {
-		User.find()
+	async getUsers(req, res) {
+		await User.find({})
+			.populate({ path: 'thoughts', select: '-__v' })
+			.populate({ path: 'friends', select: '-__v' })
+			.select('-__v')
 			.then(async (users) => {
-				const userObj = {
-					users,
-				};
+				const userObj = { users };
 				return res.json(userObj);
 			})
 			.catch((err) => {
@@ -16,32 +16,50 @@ module.exports = {
 				return res.status(500).json(err);
 			});
 	},
+
 	// Get a single user
-	getSingleUser(req, res) {
-		User.findOne({ _id: req.params.userId })
-			.select("-__v")
+	async getSingleUser(req, res) {
+		await User.findOne({ _id: req.params.userId })
+			.populate({ path: 'thoughts', select: '-__v' })
+			.populate({ path: 'friends', select: '-__v' })
+			.select('-__v')
 			.then(async (user) =>
 				!user
 					? res.status(404).json({ message: "No user with that ID" })
-					: res.json({
-							user,
-							grade: await grade(req.params.userId),
-					  })
+					: res.json({ user })
 			)
 			.catch((err) => {
 				console.log(err);
 				return res.status(500).json(err);
 			});
 	},
+
 	// create a new user
-	createUser(req, res) {
-		User.create(req.body)
+	async createUser({ body }, res) {
+		await User.create(body)
 			.then((user) => res.json(user))
 			.catch((err) => res.status(500).json(err));
 	},
+
+	// Update a user
+	async updateUser({ params, body }, res) {
+		await User.findOneAndUpdate(
+			{ _id: params.id }, 
+			body, 
+			{ runValidators: true, new: true }
+		).then((user) => 
+			!user
+				? res.status(404).json({ message: "No such user exists" })
+				: res.json({ user })
+		).catch((err) => {
+			console.log(err);
+			return res.status(500).json(err);
+		})
+	},
+
 	// Delete a user and remove them from the thought
-	deleteUser(req, res) {
-		User.findOneAndRemove({ _id: req.params.userId })
+	async deleteUser(req, res) {
+		await User.findOneAndRemove({ _id: req.params.userId })
 			.then((user) =>
 				!user
 					? res.status(404).json({ message: "No such user exists" })
@@ -65,41 +83,42 @@ module.exports = {
 	},
 
 	// Add Friend
-	addFriend({ params }, res) {
+	async addFriend({ params }, res) {
 		try {
-			const user = User.findOneAndUpdate(
+			const user = await User.findOneAndUpdate(
 				{ _id: params.id },
 				{ $pull: { friend: body.id } },
-				{ new: true })
+				{ new: true }
+			)
 				.populate({ path: "friends", select: "-__v" })
 				.select("-__v");
 			if (!user) {
 				res.status(500).json({ message: "User does not exist." });
 				return;
 			}
-
 			res.json(user);
 		} catch (err) {
 			res.json(err);
 		}
 	},
 
-  // Delete Friend
-  removeFriend({ params }, res) {
-    try {
-      const user = User.findOneAndUpdate(
+	// Delete Friend
+	async removeFriend({ params }, res) {
+		try {
+			const user = await User.findOneAndUpdate(
 				{ _id: params.id },
 				{ $pull: { friend: params.friendId } },
-				{ new: true })
-      .populate({ path: "friends", select: "-__v" })
-      .select("-__v");
-      if (!user) {
+				{ new: true }
+			)
+				.populate({ path: "friends", select: "-__v" })
+				.select("-__v");
+			if (!user) {
 				res.status(500).json({ message: "User does not exist." });
 				return;
 			}
 			res.json(user);
 		} catch (err) {
 			res.json(err);
-    }
-  }
-}
+		}
+	},
+};
