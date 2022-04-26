@@ -4,9 +4,9 @@ module.exports = {
 	// Get all users
 	async getUsers(req, res) {
 		await User.find({})
-			.populate({ path: 'thoughts', select: '-__v' })
-			.populate({ path: 'friends', select: '-__v' })
-			.select('-__v')
+			.populate({ path: "thoughts", select: "-__v" })
+			.populate({ path: "friends", select: "-__v" })
+			.select("-__v")
 			.then(async (users) => {
 				const userObj = { users };
 				return res.json(userObj);
@@ -20,9 +20,9 @@ module.exports = {
 	// Get a single user
 	async getSingleUser(req, res) {
 		await User.findOne({ _id: req.params.userId })
-			.populate({ path: 'thoughts', select: '-__v' })
-			.populate({ path: 'friends', select: '-__v' })
-			.select('-__v')
+			.populate({ path: "thoughts", select: "-__v" })
+			.populate({ path: "friends", select: "-__v" })
+			.select("-__v")
 			.then(async (user) =>
 				!user
 					? res.status(404).json({ message: "No user with that ID" })
@@ -43,82 +43,83 @@ module.exports = {
 
 	// Update a user
 	async updateUser({ params, body }, res) {
-		await User.findOneAndUpdate(
-			{ _id: params.id }, 
-			body, 
-			{ runValidators: true, new: true }
-		).then((user) => 
-			!user
-				? res.status(404).json({ message: "No such user exists" })
-				: res.json({ user })
-		).catch((err) => {
-			console.log(err);
-			return res.status(500).json(err);
+		await User.findOneAndUpdate({ _id: params.id }, body, {
+			runValidators: true,
+			new: true,
 		})
-	},
-
-	// Delete a user and remove them from the thought
-	async deleteUser(req, res) {
-		await User.findOneAndRemove({ _id: req.params.userId })
 			.then((user) =>
 				!user
 					? res.status(404).json({ message: "No such user exists" })
-					: Thought.findOneAndUpdate(
-							{ users: req.params.userId },
-							{ $pull: { users: req.params.userId } },
-							{ new: true }
-					  )
-			)
-			.then((thought) =>
-				!thought
-					? res.status(404).json({
-							message: "User deleted, but no thoughts found",
-					  })
-					: res.json({ message: "User successfully deleted" })
+					: res.json({ user })
 			)
 			.catch((err) => {
 				console.log(err);
-				res.status(500).json(err);
+				return res.status(500).json(err);
 			});
 	},
 
+	// Delete a user and remove them from the thought
+	async deleteUser({ params }, res) {
+		await User.findOneAndRemove({ _id: params.id })
+		await Promise.all(user.thought.map((thought) => 
+			Thought.findOneAndDelete({ _id: thought })))
+				.then((user) =>
+					!user
+						? res.status(404).json({ message: "No such user exists" })
+						: Thought.findOneAndUpdate(
+								{ users: req.params.userId },
+								{ $pull: { users: req.params.userId } },
+								{ new: true }))
+				.then((thought) =>
+					!thought
+						? res.status(404).json({
+								message: "User deleted, but no thoughts found",
+						})
+						: res.json({ message: "User successfully deleted" }))
+				.catch((err) => {
+					console.log(err);
+					res.status(500).json(err);
+			}
+		);
+	},
+
 	// Add Friend
-	async addFriend({ params }, res) {
+	async addFriend({ params, body }, res) {
 		try {
 			const user = await User.findOneAndUpdate(
 				{ _id: params.id },
-				{ $pull: { friend: body.id } },
-				{ new: true }
-			)
-				.populate({ path: "friends", select: "-__v" })
-				.select("-__v");
+				{ $push: { friends: body.id } },
+				{ new: true })
+				.populate({ path: "friends", select: ("-__v") })
+				.select("-__v")
+
 			if (!user) {
-				res.status(500).json({ message: "User does not exist." });
+				res.status(404).json({ message: "No such user exists" });
 				return;
-			}
-			res.json(user);
-		} catch (err) {
-			res.json(err);
-		}
+			} res.json(user)
+		} catch(err) {
+			console.log(err);
+			return res.status(500).json(err);
+		};
 	},
 
 	// Delete Friend
 	async removeFriend({ params }, res) {
-		try {
-			const user = await User.findOneAndUpdate(
-				{ _id: params.id },
-				{ $pull: { friend: params.friendId } },
-				{ new: true }
+		await User.findOneAndUpdate(
+			{ _id: params.id },
+			{ $pull: { friend: params.friendId } },
+			{ new: true })
+			.populate({ path: "friends", select: "-__v" })
+			.select("-__v")
+			.then((user) =>
+				!user
+					? res.status(404).json({ message: "No such user exists" })
+					: res.json({ user })
 			)
-				.populate({ path: "friends", select: "-__v" })
-				.select("-__v");
-			if (!user) {
-				res.status(500).json({ message: "User does not exist." });
-				return;
+			.catch((err) => {
+				console.log(err);
+				return res.status(500).json(err);
 			}
-			res.json(user);
-		} catch (err) {
-			res.json(err);
-		}
-	},
+		);
+	}
 };

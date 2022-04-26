@@ -54,8 +54,14 @@ module.exports = {
   },
 
     // Create a reaction
-    async createReaction(req, res) {
-      await Reaction.create(req.body)
+    async createReaction({ params, body }, res) {
+      await Thought
+        .findOneAndUpdate(
+          { _id: params.thoughtId },
+          { $push: { reactions: body } },
+          { runvalidators: true, new: true })
+        .populate({ path: 'reaction', slect: '-__v' })
+        .select('-__v')
         .then((reaction) => res.json(reaction))
         .catch((err) => {
           console.log(err);
@@ -65,7 +71,7 @@ module.exports = {
   
     // Delete a reaction
     async deleteReaction(req, res) {
-      await Reaction.findOneAndDelete({ _id: req.params.thoughtId })
+      await Thought.findOneAndDelete({ _id: req.params.thoughtId })
         .then((reaction) =>
           !reaction
             ? res.status(404).json({ message: 'No reaction with that ID' })
