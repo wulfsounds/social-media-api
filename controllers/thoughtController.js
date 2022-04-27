@@ -43,8 +43,7 @@ module.exports = {
     await Thought.findOneAndUpdate(
       { _id: req.params.thoughtId },
       { $set: req.body },
-      { runValidators: true, new: true }
-    )
+      { runValidators: true, new: true })
       .then((thought) =>
         !thought
           ? res.status(404).json({ message: 'No thought with this id!' })
