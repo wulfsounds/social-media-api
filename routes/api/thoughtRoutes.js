@@ -9,19 +9,19 @@ const {
   deleteReaction,
 } = require('../../controllers/thoughtController.js');
 
-// /api/thoughts => GET all thoughts.
+// /api/thought => GET all thoughts.
 router.route('/').get(getThoughts).post(createThought);
 
-// /api/thoughts/:ThoughtId => GET / UPDATE / DELETE thought by ID.
+// /api/thought/:ThoughtId => GET / UPDATE / DELETE thought by ID.
 router.route('/:thoughtId').get(getSingleThought).put(updateThought).delete(deleteThought);
 
-// /api/thoughts/:userId => CREATE thought under User ID
+// /api/thought/:userId => CREATE thought under User ID
 router.route('/:userId').post(createThought);
 
-// /api/thoughts/:thoughtId/reactions => CREATE reaction.
+// /api/thought/:thoughtId/reaction => CREATE reaction.
 router.route('/:thoughtId/reaction').post(createReaction);
 
-// /api/thoughts/:thoughtId/reactions/:reactionId' => DELETE reaction
+// /api/thought/:thoughtId/reaction/:reactionId' => DELETE reaction
 router.route('/:thoughtId/reaction/:reactionId').delete(deleteReaction);
 
 module.exports = router;

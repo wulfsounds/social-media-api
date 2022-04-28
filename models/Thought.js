@@ -11,7 +11,7 @@ const ReactionSchema = new Schema (
         reactionBody: {
            type: String,
            required: true,
-           maxlength: 280
+           maxLength: 280
         },
         username: {
            type: String,
@@ -25,8 +25,7 @@ const ReactionSchema = new Schema (
         }
     },
     { 
-        toJSON: { getters: true },
-        _id: false,
+        toJSON: { getters: true, virtuals: true },
         id: false
     }
 )
@@ -37,8 +36,8 @@ const ThoughtSchema = new Schema (
         thoughtText: {
             type: String,
             required: true,
-            minlength: 1,
-            maxlength: 128
+            minLength: 1,
+            maxLength: 280
         },
         createdAt: {
             type: Date,
@@ -50,13 +49,15 @@ const ThoughtSchema = new Schema (
         reaction: [ReactionSchema]
     },
     { 
-        toJSON: { getters: true, virtual: true },
+        toJSON: { getters: true, virtuals: true },
         id: false 
     }
 )
 
 // Create a virtual called `reactionCount` that retrieves the length of the thought's `reactions` array field on query.
-ThoughtSchema.virtual('reactionCount').get(function () { return this.reaction.length });
+ThoughtSchema.virtual('reactionCount').get(function () { 
+    return this.reaction.length 
+});
 const Thought = model('Thought', ThoughtSchema);
 
 module.exports = Thought;

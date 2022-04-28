@@ -14,8 +14,7 @@ module.exports = {
       .then((thought) =>
         !thought
           ? res.status(404).json({ message: 'No thought with that ID' })
-          : res.json(thought)
-      )
+          : res.json(thought))
       .catch((err) => res.status(500).json(err));
   },
   // Create a thought
@@ -27,17 +26,18 @@ module.exports = {
         return res.status(500).json(err);
       });
   },
+
   // Delete a thought
-  async deleteThought(req, res) {
-    await Thought.findOneAndDelete({ _id: req.params.thoughtId })
+  deleteThought(req, res) {
+    Thought.findOneAndDelete({ _id: req.params.thoughtId })
       .then((thought) =>
         !thought
           ? res.status(404).json({ message: 'No thought with that ID' })
-          : User.deleteMany({ _id: { $in: thought.user } })
+          : res.json({ message: "Thought deleted!"})
       )
-      .then(() => res.json({ message: 'Thought and user deleted!' }))
       .catch((err) => res.status(500).json(err));
   },
+
   // Update a thought
   async updateThought(req, res) {
     await Thought.findOneAndUpdate(
@@ -53,17 +53,17 @@ module.exports = {
   },
 
     // Create a reaction
-    async createReaction({ params, body }, res) {
+    async createReaction(req, res) {
       await Thought
         .findOneAndUpdate(
-          { _id: params.thoughtId },
-          { $push: { reactions: body } },
+          { _id: req.params.thoughtId },
+          { $addToSet: { reaction: req.body } },
           { runvalidators: true, new: true })
-        .populate({ path: 'reaction', slect: '-__v' })
-        .select('-__v')
-        .then((reaction) => res.json(reaction))
+        .then((thought) => 
+          !thought
+            ? res.status(404).json({ message: 'No thoughts with that ID' })
+            : res.json(thought))
         .catch((err) => {
-          console.log(err);
           return res.status(500).json(err);
         });
     },
